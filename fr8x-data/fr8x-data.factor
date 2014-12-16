@@ -1,7 +1,7 @@
 ! Copyright (C) 2014 Your name.
 ! See http://factorcode.org/license.txt for BSD license.
 USING: kernel locals accessors math sequences math.bitwise bitstreams io.files io xml io.encodings.binary xml.traversal strings
-  assocs math.parser combinators fry arrays io.encodings.ascii io.encodings.string ;
+  assocs math.parser combinators fry arrays io.encodings.ascii io.encodings.string fr8x-data-format-syntax ;
 FROM: io => read ;
 RENAME: read bitstreams => bsread 
 
@@ -61,77 +61,121 @@ ERROR: setfileerror desc ;
     swap at* 
     [ "Missing chunk type" throw-set-loading-error ] unless
     [ <msb0-bit-reader> ] map ;
-
-:: bsread-string ( bitreader count width -- string ) 
-    count [ width bitreader bsread ] replicate ascii decode ;
     
 
-TUPLE: scData creator type ver num name reverb-character reverb-prelpf reverb-time reverb-delay reverb-predelay reverb-level 
-   reverb-selected chorus-prelpf chorus-feedback chorus-delay chorus-rate chorus-depth chorus-sendrev chorus-senddelay 
-   chorus-level chorus-selected delay-prelpf delay-timecenter delay-timeratioleft delay-timeratioright delay-levelcenter 
-   delay-levelleft delay-levelright delay-feedback delay-sendreverb delay-level delay-selected masterbar-recall-register 
-   index-icon bassoon edited junk unknown ;
+
+! Defines scData, read-scData
+
+ROLAND-CHUNK-FORMAT: scData
+    creator ascii 4 7
+    type ascii 4 7
+    ver ascii 4 7
+    num ascii 4 7
+    name ascii 4 7
+    reverb-character integer 7
+    reverb-prelpf integer 7
+    reverb-time integer 7
+    reverb-delay integer 7
+    reverb-predelay integer 7
+    reverb-level integer 7
+    reverb-selected integer 7
+    chorus-prelpf integer 7
+    chorus-feedback integer 7
+    chorus-delay integer 7
+    chorus-rate integer 7
+    chorus-depth integer 7
+    chorus-sendrev integer 7
+    chorus-senddelay integer 7
+    chorus-level integer 7
+    chorus-selected integer 7
+    delay-prelpf integer 7
+    delay-time-center integer 7
+    delay-time-ratio-left integer 7
+    delay-time-ratio-right integer 7
+    delay-level-center integer 7
+    delay-level-left integer 7
+    delay-level-right integer 7
+    delay-feedback integer 7
+    delay-send-reverb integer 7
+    delay-level integer 7
+    delay-selected integer 7
+    master-bar-recall integer 7
+    index-icon integer 7
+    bassoon integer 7
+    edited integer 7
+    dummy integer 15
+    unknown intlist 57 7 ;
+
+    
+! Defines: trData, read-trData
 
 
-: parse-sc ( -- head ) test "SC" get-chunk first
-  { [ 4 7 bsread-string ]                       ! Creator 
-    [ 4 7 bsread-string ]                       ! Type
-    [ 4 7 bsread-string ]                       ! Ver
-    [ 4 7 bsread-string ]                       ! Num
-    [ 8 7 bsread-string ]                       ! Name
-    [ 7 swap bsread ]                           ! Reverb Character
-    [ 7 swap bsread ]                           ! Reverb Prelpf
-    [ 7 swap bsread ]                           ! Reverb Time
-    [ 7 swap bsread ]                           ! Reverb Delay
-    [ 7 swap bsread ]                           ! Reverb Predelay
-    [ 7 swap bsread ]                           ! Reverb Level
-    [ 7 swap bsread ]                           ! Reverb Selected
-    [ 7 swap bsread ]                           ! Chorus Prelpf
-    [ 7 swap bsread ]                           ! Chorus Feedback
-    [ 7 swap bsread ]                           ! Chorus Delay
-    [ 7 swap bsread ]                           ! Chorus Rate
-    [ 7 swap bsread ]                           ! Chorus Depth
-    [ 7 swap bsread ]                           ! Chorus Sendrev
-    [ 7 swap bsread ]                           ! Chorus Senddelay
-    [ 7 swap bsread ]                           ! Chorus Level
-    [ 7 swap bsread ]                           ! Chorus Selected
-    [ 7 swap bsread ]                           ! Delay Prelpf
-    [ 7 swap bsread ]                           ! Delay Time Center
-    [ 7 swap bsread ]                           ! Delay Time Ratio Left
-    [ 7 swap bsread ]                           ! Delay Time Ratio Right
-    [ 7 swap bsread ]                           ! Delay Level Center
-    [ 7 swap bsread ]                           ! Delay Level Left
-    [ 7 swap bsread ]                           ! Delay Level Right
-    [ 7 swap bsread ]                           ! Delay Feedback
-    [ 7 swap bsread ]                           ! Delay Send Reverb
-    [ 7 swap bsread ]                           ! Delay Level
-    [ 7 swap bsread ]                           ! Delay Selected
-    [ 7 swap bsread ]                           ! Master Bar Recall Register
-    [ 7 swap bsread ]                           ! Index-Icon
-    [ 7 swap bsread ]                           ! Bassoon
-    [ 7 swap bsread ]                           ! Edited
-    [ 15 swap bsread ]                          ! Dummy
-    [ 57 7 bsread-string ]                      ! Unknown
-  } cleave scData boa ;
-
-TUPLE: orData custom-name patch-cc00 patch-cc32 patch-pc patch-1-cc00 patch-1-cc32 patch-1-pc patch-1-volume patch-1-octave
-  dynamic-mode reg-edited vtw-preset-ref vtw-preset-edited junk ;
-
-: parse-o_r ( -- head ) test "O_R" get-chunk 
-  [ { [ 12 7 bsread-string ]
-    [ 7 swap bsread ]
-    [ 7 swap bsread ]
-    [ 7 swap bsread ]
-    [ 7 swap bsread ]
-    [ 7 swap bsread ]
-    [ 7 swap bsread ]
-    [ 7 swap bsread ]
-    [ 7 swap bsread ]
-    [ 7 swap bsread ]
-    [ 7 swap bsread ]
-    [ 7 swap bsread ]
-    [ 7 swap bsread ]
-    [ 8 7 bsread-string ] } cleave orData boa ] map ;
+ROLAND-CHUNK-FORMAT: trData
+    register-name ascii 8 7 
+    voice-timbre-cc00 intlist 10 7
+    voice-timbre-cc32 intlist 10 7
+    voice-timbre-pc intlist 10 7
+    voice-on-off intlist 10 7
+    voice-cassotto intlist 10 7
+    voice-volume intlist 10 7
+    orchestral-mode integer 7
+    orchestral-tone-num integer 7
+    musette-detune integer 7
+    reverb-send integer 7
+    chorus-send integer 7
+    delay-send integer 7
+    bellow-pitch-detune integer 7
+    octave integer 7
+    valve-noise-on-off integer 7
+    valve-noise-volume integer 7
+    valve-noise-cc00 integer 7
+    valve-noise-cc32 integer 7
+    valve-noise-pc integer 7
+    link-bass integer 7
+    link-orch-bass integer 7
+    link-orch-chord-freebass integer 7
+    aftertouch-pitch-down integer 7
+    note-tx-filter integer 7
+    note-on-velocity integer 7
+    midi-octave integer 7
+    midi-cc0 integer 12
+    midi-cc32 integer 12
+    midi-pc integer 12
+    midi-aftertouch integer 12
+    midi-volume integer 12
+    midi-panpot integer 12
+    midi-reverb integer 12
+    midi-chorus integer 12
+    edited integer 7
+    dummy intlist 7 7 ;
 
 
+! Defines orData, read-orData
+ROLAND-CHUNK-FORMAT: orData
+   custom-name ascii 12 7
+   patch-cc00 integer 7
+   patch-cc32 integer 7
+   patch-pc integer 7
+   patch-1-cc00 integer 7
+   patch-1-cc32 integer 7
+   patch-1-pc integer 7
+   patch-1-volume integer 7
+   patch-1-octave integer 7
+   dynamic-mode integer 7
+   reg-edited integer 7
+   vtw-preset-ref integer 7
+   vtw-preset-edited integer 7
+   junk intlist 8 7 ;
   
+
+ROLAND-CHUNK-FORMAT: orchBassData
+    custom-name ascii 12 7
+    patch-cc00 integer 7
+    patch-cc32 integer 7
+    patch-pc integer 7
+    dynamic-mode integer 7
+    reg-edited integer 7
+    vtw-preset-ref integer 7
+    vtw-preset-edited integer 7
+    junk intlist 8 7 ;
+
