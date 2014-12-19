@@ -1,8 +1,10 @@
 ! Copyright (C) 2014 Your name.
 ! See http://factorcode.org/license.txt for BSD license.
 USING: kernel locals accessors math sequences math.bitwise bitstreams io.files io xml io.encodings.binary xml.traversal strings
-  assocs math.parser combinators fry arrays io.encodings.ascii io.encodings.string fr8x-data-format-syntax ;
+  assocs math.parser combinators fry arrays io.encodings.ascii io.encodings.string fr8x-data-format-syntax io.directories 
+  sequences.deep byte-arrays ;
 FROM: io => read ;
+FROM: assocs => change-at ;
 RENAME: read bitstreams => bsread 
 
 IN: fr8x-data 
@@ -51,22 +53,12 @@ ERROR: setfileerror desc ;
 
 : load-chunks ( chunkinfos -- chunkdatas ) tell-input 1 - [ load-chunk ] curry map ;
 
-: parse-set-file ( -- head ) parse-header load-chunks ;
-
-: load-set-file ( fn --  head ) binary [ parse-set-file ] with-file-reader ;
-
-: test ( -- head ) "FR-8X_SET_001.ST8" load-set-file ;
-
-: get-chunk ( alist id -- chunk ) 
-    swap at* 
-    [ "Missing chunk type" throw-set-loading-error ] unless
-    [ <msb0-bit-reader> ] map ;
     
 
 
 ! Defines scData, read-scData
 
-ROLAND-CHUNK-FORMAT-X: scData
+ROLAND-CHUNK-FORMAT: scData
     creator ascii 4 7
     type ascii 4 7
     ver ascii 4 7
@@ -110,7 +102,7 @@ ROLAND-CHUNK-FORMAT-X: scData
 ! Defines: trData, read-trData
 
 
-ROLAND-CHUNK-FORMAT-X: trData
+ROLAND-CHUNK-FORMAT: trData
     register-name ascii 8 7 
     voice-timbre-cc00 intlist 10 7
     voice-timbre-cc32 intlist 10 7
@@ -178,4 +170,27 @@ ROLAND-CHUNK-FORMAT: orchBassData
     vtw-preset-ref integer 7
     vtw-preset-edited integer 7
     junk intlist 8 7 ;
+
+
+: decode-known-chunks ( chunks -- chunks ) 
+    dup "TR" swap [ [ <msb0-bit-reader> unpack-trData ] map ] change-at ;
+
+: encode-known-chunks ( chunks -- chunks ) 
+    dup "TR" swap [ [ pack-trData ] map ] change-at ;
+
+: parse-set-file ( -- data ) parse-header load-chunks decode-known-chunks ;
+
+: load-set-file ( fn --  data ) binary [ parse-set-file ] with-file-reader ;
+
+: test ( -- head ) "FR-8X_SET_001.ST8" load-set-file ;
+
+: get-chunk ( alist id -- chunk ) 
+    swap at* 
+    [ "Missing chunk type" throw-set-loading-error ] unless ;
+
+: write-chunks ( chunks -- ) encode-known-chunks values flatten >byte-array write flush ;
+
+: save-set-file ( data fn -- ) dup "resource:work/fr8x-data/standard.preamble" swap copy-file 
+     binary [ write-chunks ] with-file-appender ;
+
 
