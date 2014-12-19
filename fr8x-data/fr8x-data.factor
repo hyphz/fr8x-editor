@@ -66,12 +66,12 @@ ERROR: setfileerror desc ;
 
 ! Defines scData, read-scData
 
-ROLAND-CHUNK-FORMAT: scData
+ROLAND-CHUNK-FORMAT-X: scData
     creator ascii 4 7
     type ascii 4 7
     ver ascii 4 7
     num ascii 4 7
-    name ascii 4 7
+    name ascii 8 7
     reverb-character integer 7
     reverb-prelpf integer 7
     reverb-time integer 7
@@ -110,7 +110,7 @@ ROLAND-CHUNK-FORMAT: scData
 ! Defines: trData, read-trData
 
 
-ROLAND-CHUNK-FORMAT: trData
+ROLAND-CHUNK-FORMAT-X: trData
     register-name ascii 8 7 
     voice-timbre-cc00 intlist 10 7
     voice-timbre-cc32 intlist 10 7
@@ -147,7 +147,7 @@ ROLAND-CHUNK-FORMAT: trData
     midi-reverb integer 12
     midi-chorus integer 12
     edited integer 7
-    dummy intlist 7 7 ;
+    dummy intlist 244 7 ;
 
 
 ! Defines orData, read-orData
