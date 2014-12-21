@@ -1,0 +1,179 @@
+#Format is CC00, CC32, PC, name.
+#If name starts with *, not shown in Orchestra selection unless in risky mode.
+0 0 0 *Jazz Bassoon
+0 0 1 *Bandoneon Bassoon
+0 0 2 *I-Folk Bassoon
+0 0 3 *Ballroom Bassoon
+0 0 4 *D-Folk Bassoon
+0 0 5 *CiaoRome Bassoon
+0 0 6 *Steierische Bassoon
+0 0 7 *Cajun Bassoon
+0 0 8 *TexMex Bassoon
+0 0 9 *F-Folk Bassoon
+0 0 10 *OldParis Bassoon
+0 0 11 *SP-Folk Bassoon
+0 0 14 *Concerto Bassoon
+0 0 15 *DiatFolk Bassoon
+0 0 16 *Classic Bassoon
+0 0 17 *F-Jazz Bassoon
+0 0 18 *Bayan Bassoon
+0 0 19 *I-Scala Bassoon
+0 0 68 Mute Harmonica
+0 0 71 Nylon/Steel Guitar
+0 0 77 Vibrophone
+0 0 81 Scat Voice
+0 0 88 Electric Piano
+0 0 93 String
+0 0 100 Picked Bass
+0 0 103 Contrabass
+0 0 106 Pizzicato Violin
+0 0 107 Pan Flute
+0 0 108 Zampogna
+0 0 109 Highland
+0 0 114 AC Piano
+0 0 115 Harmonica
+0 0 116 Acoustic Guitar
+0 0 117 Mandolin
+0 0 118 Violin
+0 0 120 Trumpet
+0 0 122 Alto Sax
+0 0 123 Tenor Sax
+0 0 124 Oboe
+0 0 125 Clarinet
+0 0 126 Flute
+0 1 17 Fingered
+0 1 18 PolkaBass
+0 1 44 FolkTuba1
+0 1 90 AcBass 88
+1 0 0 *Jazz Clarinet
+1 0 1 *Bandoneon Clarinet
+1 0 2 *I-Folk Clarinet
+1 0 3 *Ballroom Clarinet
+1 0 4 *D-Folk Clarinet
+1 0 5 *CiaoRome Clarinet
+1 0 6 *Steierische Clarinet
+1 0 7 *Cajun Clarinet
+1 0 8 *TexMex Clarinet
+1 0 9 *F-Folk Clarinet
+1 0 10 *OldParis Clarinet
+1 0 11 *SP-Folk Clarinet
+1 0 14 *Concerto Clarinet
+1 0 15 *DiatFolk Clarinet
+1 0 16 *Classic Clarinet
+1 0 17 *F-Jazz Clarinet
+1 0 18 *Bayan Clarinet
+1 0 19 *I-Scala Clarinet
+2 0 0 *Jazz Left Musette
+2 0 1 *Bandoneon Left Musette
+2 0 2 *I-Folk Left Musette
+2 0 3 *Ballroom Left Musette
+2 0 4 *D-Folk Left Musette
+2 0 5 *CiaoRome Left Musette
+2 0 6 *Steierische Left Musette
+2 0 7 *Cajun Left Musette
+2 0 8 *TexMex Clarinet
+2 0 9 *F-Folk Left Musette
+2 0 10 *OldParis Left Musette
+2 0 11 *SP-Folk Left Musette
+2 0 14 *Concerto Left Musette
+2 0 15 *DiatFolk Left Musette
+2 0 16 *Classic Left Musette
+2 0 17 *F-Jazz Left Musette
+2 0 18 *Bayan Left Musette
+2 0 19 *I-Scala Left Musette
+3 0 0 *Jazz Right Musette
+3 0 1 *Bandoneon Right Musette
+3 0 2 *I-Folk Right Musette
+3 0 3 *Ballroom Right Musette
+3 0 4 *D-Folk Right Musette
+3 0 5 *CiaoRome Right Musette
+3 0 6 *Steierische Right Musette
+3 0 7 *Cajun Right Musette
+3 0 8 *TexMex Clarinet
+3 0 9 *F-Folk Right Musette
+3 0 10 *OldParis Right Musette
+3 0 11 *SP-Folk Right Musette
+3 0 14 *Concerto Right Musette
+3 0 15 *DiatFolk Right Musette
+3 0 16 *Classic Right Musette
+3 0 17 *F-Jazz Right Musette
+3 0 18 *Bayan Right Musette
+3 0 19 *I-Scala Right Musette
+4 0 0 *Jazz Piccolo
+4 0 1 *Bandoneon Piccolo
+4 0 2 *I-Folk Piccolo
+4 0 3 *Ballroom Piccolo
+4 0 4 *D-Folk Piccolo
+4 0 5 *CiaoRome Piccolo
+4 0 6 *Steierische Piccolo
+4 0 7 *Cajun Piccolo
+4 0 8 *TexMex Piccolo
+4 0 9 *F-Folk Piccolo
+4 0 10 *OldParis Piccolo
+4 0 11 *SP-Folk Piccolo
+4 0 14 *Concerto Piccolo
+4 0 15 *DiatFolk Piccolo
+4 0 16 *Classic Piccolo
+4 0 17 *F-Jazz Piccolo
+4 0 18 *Bayan Piccolo
+4 0 19 *I-Scala Piccolo
+5 0 17 *F-Jazz Extra1
+6 0 17 *F-Jazz Extra2
+18 0 0 *Jazz Valve Noise
+18 0 1 *Bandoneon Valve Noise
+18 0 2 *I-Folk Valve Noise
+18 0 3 *Ballroom Valve Noise
+18 0 4 *D-Folk Valve Noise
+18 0 5 *CiaoRome Valve Noise
+18 0 6 *Steierische Valve Noise
+18 0 7 *Cajun Valve Noise
+18 0 8 *TexMex Valve Noise
+18 0 9 *F-Folk Valve Noise
+18 0 10 *OldParis Valve Noise
+18 0 11 *SP-Folk Valve Noise
+18 0 14 *Concerto, I-Scala, Bayan Valve Noise
+18 0 15 *DiatFolk Valve Noise
+18 0 16 *Classic Valve Noise
+18 0 17 *F-Jazz Valve Noise
+80 1 1 *Dallape 1871 Bassoon
+80 1 2 *Dallape 1871 Clarinet
+80 1 3 *Dallape 1871 Left Musette
+80 1 4 *Dallape 1871 Right Musette
+80 1 5 *Dallape 1871 Piccolo
+80 1 19 *Dallape 1871 Valve Noise
+80 1 33 *Dallape Centenary Bassoon
+80 1 34 *Dallape Centenary Clarinet
+80 1 35 *Dallape Centenary Left Musette
+80 1 36 *Dallape Centenary Right Musette
+80 1 37 *Dallape Centenary Piccolo
+80 1 65 *Dallape Liturgi1+2 Bassoon
+80 1 66 *Dallape Liturgi1+2 Clarinet
+80 1 67 *Dallape Liturgi1+2 Left Musette
+80 1 68 *Dallape Liturgi1+2 Right Musette
+80 1 69 *Dallape Liturgi1+2 Piccolo
+80 1 83 *Dallape Liturgi1 Valve Noise 1
+80 1 97 *Dallape Liturgi1+2 BASS32 Bassoon
+80 1 115 *Dallape Valve Noise
+80 2 1 *Dallape Liturgi1 Alternate Bassoon
+80 2 19 *Dallape Liturgi1 Valve Noise 2
+80 2 33 *Dallape SM1965 Bassoon
+80 2 34 *Dallape SM1965 Clarinet
+80 2 35 *Dallape SM1965 Left Musette
+80 2 36 *Dallape SM1965 Right Musette
+80 2 37 *Dallape SM1965 Piccolo
+80 2 51 *Dallape SM1965 Valve Noise
+80 2 65 *Dallape Organtone Bassoon
+80 2 66 *Dallape Organtone Clarinet
+80 2 67 *Dallape Organtone Left Musette
+80 2 68 *Dallape Organtone Right Musette
+80 2 69 *Dallape Organtone Piccolo
+80 2 97 *Dallape SM2010 Bassoon
+80 2 98 *Dallape SM2010 Clarinet
+80 2 99 *Dallape SM2010 Left Musette
+80 2 100 *Dallape SM2010 Right Musette
+80 2 101 *Dallape SM2010 Piccolo
+80 2 115 *Dallape SM2010 Valve Noise
+110 0 0 *Multiple Organ?
+110 2 0 Fretless
+127 127 14 *Unknown
+127 127 127 *Unknown
