@@ -17,22 +17,25 @@ RENAME: read bitstreams => bsread
     [ ascii encode ] dip packlist ;
 
 : padbitseq ( bitseq -- bitseq )
-    dup length 8 mod dup 0 =
-    [ drop ] [ 8 swap - f <repetition> append ] if ;
+    dup length 8 mod
+    [ 8 swap - f <repetition> append ] unless-zero ;
 
 : dumpbitseq ( bitseq -- ints )
     padbitseq 8 group [ reverse bits>number ] map >byte-array ;
 
 ! Huge thanks to John Benediktsson for the metaprogramming code below
 
-:: bsread-list ( bitreader count width -- list )
-    count [ width bitreader bsread ] replicate ;
+: bsread-list ( bitreader count width -- list )
+    rot '[ _ _ bsread ] replicate ;
 
 : bsread-string ( bitreader count width -- string )
     bsread-list ascii decode ;
 
 SYNTAX: ROLAND-CHUNK-FORMAT:
-      scan-token [ "unpack-" prepend create-in ] [ "pack-" prepend create-in ] [ create-class-in ] tri
+      scan-token
+      [ "unpack-" prepend create-in ]
+      [ "pack-" prepend create-in ]
+      [ create-class-in ] tri
       [
           [ scan-token dup ";" = ] [
               scan-token {

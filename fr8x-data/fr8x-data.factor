@@ -8,7 +8,7 @@ FROM: io => read ;
 FROM: assocs => change-at ;
 RENAME: read bitstreams => bsread
 
-IN: fr8x-data 
+IN: fr8x-data
 
 TUPLE: chunkinfo
 { name string }
@@ -18,7 +18,7 @@ TUPLE: chunkinfo
 
 ERROR: loading-error desc ;
 
-: get-header ( -- bin )
+: read-header ( -- bin )
     "\x8d" read-until
     [ "Missing end of preamble marker" loading-error ] unless ;
 
@@ -32,7 +32,7 @@ ERROR: loading-error desc ;
 : get-chunk-tags ( head -- vector )
     children>> second children-tags ;
 
-: get-int-attr ( attrs name -- int ) 
+: get-int-attr ( attrs name -- int )
     swap at*
     [ "Missing expected attribute in XML preamble" loading-error ] unless
     string>number ;
@@ -42,15 +42,16 @@ ERROR: loading-error desc ;
     "size" "number" "offset" [ get-int-attr ] tri-curry@ tri
     chunkinfo boa ;
 
-: parse-chunk-tags ( vector -- chunks ) [ parse-chunk-tag ] map ;
+: parse-chunk-tags ( vector -- chunks )
+    [ parse-chunk-tag ] map ;
 
 : parse-header ( -- chunks )
-    get-header chop-junk bytes>xml get-chunk-tags parse-chunk-tags ;
+    read-header chop-junk bytes>xml get-chunk-tags parse-chunk-tags ;
 
-: load-chunk ( chunkinfo offset -- chunkdata ) 
+: load-chunk ( chunkinfo offset -- chunkdata )
     swap
     [ offset>> + seek-absolute seek-input ] keep
-    [ name>> ] [ count>> ] [ size>> ] tri '[ _ read ] replicate 
+    [ name>> ] [ count>> ] [ size>> ] tri '[ _ read ] replicate
     2array ;
 
 : load-chunks ( chunkinfos -- chunkdatas )
@@ -179,10 +180,10 @@ ROLAND-CHUNK-FORMAT: orchBassData
 : parse-set-file ( -- data )
     parse-header load-chunks decode-known-chunks ;
 
-: load-set-file ( fn --  data )
+: load-set-file ( fn -- data )
     binary [ parse-set-file ] with-file-reader ;
 
-: test ( -- head ) "FR-8X_SET_001.ST8" load-set-file ;
+: load-test-file ( -- head ) "FR-8X_SET_001.ST8" load-set-file ;
 
 : get-chunk ( alist id -- chunk )
     swap at* [ "Missing chunk type" loading-error ] unless ;

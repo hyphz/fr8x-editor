@@ -1,7 +1,7 @@
 ! Copyright (C) 2014 Mark Green.
 ! See http://factorcode.org/license.txt for BSD license.
 USING: accessors assocs fry kernel locals make math math.parser
-models prettyprint sequences system ui ui.gadgets
+models multiline prettyprint sequences system ui ui.gadgets
 ui.gadgets.book-extras ui.gadgets.borders ui.gadgets.buttons
 ui.gadgets.editors ui.gadgets.grids ui.gadgets.labels
 ui.gadgets.menus ui.gadgets.tracks ;
@@ -69,15 +69,18 @@ IN: fr8x-ui
 : disc-disagree ( button -- )
     close-window 1 exit ;
 
+STRING: warning-text
+Warning: This open source software is provided 'as-is' without
+guarantee of any kind. This editor is not endorsed or authorised
+by Roland or any associated company. Offline editing of set
+files is not supported by Roland. This software and generated
+sets may damage your computer and/or your V-Accordion. You use
+this software and generated sets entirely at your own risk.
+;
+
 : warning-window ( -- gadget )
     vertical <track>
-    "Warning: This open source software is provided 'as-is' without guarantee
-of any kind. This editor is not endorsed or authorised by Roland
-or any associated company. Offline editing of set files is not
-supported by Roland. This software and generated sets may damage
-your computer and/or your V-Accordion. You use this software and 
-generated sets entirely at your own risk." <label>
-    f track-add 
+    warning-text <label> f track-add
     "I agree. Let's do this." [ disc-agree ] <border-button> { 0 10 } <border> f track-add
     "Scary. Get me out of here." [ disc-disagree ] <border-button> { 0 10 } <border> f track-add 
     { 5 5 } <border> ;
