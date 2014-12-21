@@ -1,62 +1,63 @@
-! Copyright (C) 2014 Your name.
+! Copyright (C) 2014 Mark Green.
 ! See http://factorcode.org/license.txt for BSD license.
-USING: kernel locals accessors math sequences math.bitwise bitstreams io.files io xml io.encodings.binary xml.traversal strings
-  assocs math.parser combinators fry arrays io.encodings.ascii io.encodings.string fr8x-data-format-syntax io.directories 
-  sequences.deep byte-arrays ;
+USING: accessors arrays assocs bitstreams byte-arrays
+fr8x-data-format-syntax fry io io.directories
+io.encodings.binary io.files kernel math math.parser sequences
+sequences.deep strings xml xml.traversal ;
 FROM: io => read ;
 FROM: assocs => change-at ;
-RENAME: read bitstreams => bsread 
+RENAME: read bitstreams => bsread
 
-IN: fr8x-data 
+IN: fr8x-data
 
 TUPLE: chunkinfo
 { name string }
-{ size integer } 
-{ count integer } 
+{ size integer }
+{ count integer }
 { offset integer } ;
 
-ERROR: setfileerror desc ;
+ERROR: loading-error desc ;
 
-: throw-set-loading-error ( desc -- ) setfileerror boa throw ;
+: read-header ( -- bin )
+    "\x8d" read-until
+    [ "Missing end of preamble marker" loading-error ] unless ;
 
-: get-header ( -- bin ) 
-    "\x8d" read-until 
-    [ "Missing end of preamble marker" throw-set-loading-error ] unless ;
+: chop-junk ( bin -- slice )
+    CHAR: < over index [
+        tail-slice
+    ] [
+        "Missing XML document in preamble" loading-error
+    ] if* ;
 
-: chop-junk ( bin -- slice ) 
-   [ 60 swap index 
-     [ "Missing XML document in preamble" throw-set-loading-error 0 ] unless* 
-   ] keep swap tail-slice ; 
+: get-chunk-tags ( head -- vector )
+    children>> second children-tags ;
 
-: get-chunk-tags ( head -- vector ) children>> 1 swap nth children-tags ;
-
-: get-int-attr ( attrs name -- int ) 
-    swap at* 
-    [ "Missing expected attribute in XML preamble" throw-set-loading-error ] unless
+: get-int-attr ( attrs name -- int )
+    swap at*
+    [ "Missing expected attribute in XML preamble" loading-error ] unless
     string>number ;
- 
-: parse-chunk-tag ( tag -- chunkspec ) 
-    [ name>> main>> ] keep 
-    attrs>>
-    "size" "number" "offset" [ get-int-attr ] tri-curry@ tri 
+
+: parse-chunk-tag ( tag -- chunkspec )
+    [ name>> main>> ] [ attrs>> ] bi
+    "size" "number" "offset" [ get-int-attr ] tri-curry@ tri
     chunkinfo boa ;
 
-: parse-chunk-tags ( vector -- chunks ) [ parse-chunk-tag ] map ;
+: parse-chunk-tags ( vector -- chunks )
+    [ parse-chunk-tag ] map ;
 
-: parse-header ( -- chunks ) get-header chop-junk bytes>xml get-chunk-tags parse-chunk-tags ;
+: parse-header ( -- chunks )
+    read-header chop-junk bytes>xml get-chunk-tags parse-chunk-tags ;
 
-: load-chunk ( chunkinfo offset -- chunkdata ) 
+: load-chunk ( chunkinfo offset -- chunkdata )
     swap
-    [ offset>> + seek-absolute seek-input ] keep 
-    [ name>> ] [ count>> ] [ size>> ] tri '[ _ read ] replicate 
+    [ offset>> + seek-absolute seek-input ] keep
+    [ name>> ] [ count>> ] [ size>> ] tri '[ _ read ] replicate
     2array ;
 
-: load-chunks ( chunkinfos -- chunkdatas ) tell-input 1 - [ load-chunk ] curry map ;
+: load-chunks ( chunkinfos -- chunkdatas )
+    tell-input 1 - [ load-chunk ] curry map ;
 
-    
-
-
-! Defines scData, read-scData
+! Defines scData, pack-scData, unpack-scData
 
 ROLAND-CHUNK-FORMAT: scData
     creator ascii 4 7
@@ -98,9 +99,7 @@ ROLAND-CHUNK-FORMAT: scData
     dummy integer 15
     unknown intlist 57 7 ;
 
-    
-! Defines: trData, read-trData
-
+! Defines: trData, pack-trData, unpack-trData
 
 ROLAND-CHUNK-FORMAT: trData
     register-name ascii 8 7 
@@ -141,8 +140,8 @@ ROLAND-CHUNK-FORMAT: trData
     edited integer 7
     dummy intlist 244 7 ;
 
+! Defines orData, pack-orData, unpack-orData
 
-! Defines orData, read-orData
 ROLAND-CHUNK-FORMAT: orData
    custom-name ascii 12 7
    patch-cc00 integer 7
@@ -158,7 +157,8 @@ ROLAND-CHUNK-FORMAT: orData
    vtw-preset-ref integer 7
    vtw-preset-edited integer 7
    junk intlist 8 7 ;
-  
+
+! Defines orchBassData, pack-orchBassData, unpack-orchBassData
 
 ROLAND-CHUNK-FORMAT: orchBassData
     custom-name ascii 12 7
@@ -171,26 +171,26 @@ ROLAND-CHUNK-FORMAT: orchBassData
     vtw-preset-edited integer 7
     junk intlist 8 7 ;
 
+: decode-known-chunks ( chunks -- chunks )
+    "TR" over [ [ <msb0-bit-reader> unpack-trData ] map ] change-at ;
 
-: decode-known-chunks ( chunks -- chunks ) 
-    dup "TR" swap [ [ <msb0-bit-reader> unpack-trData ] map ] change-at ;
+: encode-known-chunks ( chunks -- chunks )
+    "TR" over [ [ pack-trData ] map ] change-at ;
 
-: encode-known-chunks ( chunks -- chunks ) 
-    dup "TR" swap [ [ pack-trData ] map ] change-at ;
+: parse-set-file ( -- data )
+    parse-header load-chunks decode-known-chunks ;
 
-: parse-set-file ( -- data ) parse-header load-chunks decode-known-chunks ;
+: load-set-file ( fn -- data )
+    binary [ parse-set-file ] with-file-reader ;
 
-: load-set-file ( fn --  data ) binary [ parse-set-file ] with-file-reader ;
+: load-test-file ( -- head ) "FR-8X_SET_001.ST8" load-set-file ;
 
-: test ( -- head ) "FR-8X_SET_001.ST8" load-set-file ;
+: get-chunk ( alist id -- chunk )
+    swap at* [ "Missing chunk type" loading-error ] unless ;
 
-: get-chunk ( alist id -- chunk ) 
-    swap at* 
-    [ "Missing chunk type" throw-set-loading-error ] unless ;
+: write-chunks ( chunks -- )
+    encode-known-chunks values flatten >byte-array write flush ;
 
-: write-chunks ( chunks -- ) encode-known-chunks values flatten >byte-array write flush ;
-
-: save-set-file ( data fn -- ) dup "resource:work/fr8x-data/standard.preamble" swap copy-file 
-     binary [ write-chunks ] with-file-appender ;
-
-
+: save-set-file ( data fn -- )
+    "resource:work/fr8x-data/standard.preamble" over copy-file
+    binary [ write-chunks ] with-file-appender ;
