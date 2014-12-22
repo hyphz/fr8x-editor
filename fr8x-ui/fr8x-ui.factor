@@ -4,8 +4,16 @@ USING: accessors assocs fry kernel locals make math math.parser
 models multiline prettyprint sequences system ui ui.gadgets
 ui.gadgets.book-extras ui.gadgets.borders ui.gadgets.buttons
 ui.gadgets.editors ui.gadgets.grids ui.gadgets.labels
-ui.gadgets.menus ui.gadgets.tracks ;
+ui.gadgets.menus ui.gadgets.tracks models namespaces ;
 IN: fr8x-ui
+
+SYMBOL: risky
+
+
+: risky? ( -- ? ) 
+    risky get-global value>> ;
+
+
 
 : placeholder ( -- gadget )
     vertical <track> "Lorem ipsum.." <label> f track-add ;
@@ -41,7 +49,7 @@ IN: fr8x-ui
 
 : register-buttons ( -- gadget )
     horizontal <track>
-    15 [
+    16 14 risky? ? [
         [ 1 + number>string ] [ '[ drop _ register-select ] ] bi
         <border-button> f track-add
     ] each-integer ;
@@ -49,7 +57,7 @@ IN: fr8x-ui
 : show-drop-menu ( button assoc quot -- )
     [ vertical <track> ] 2dip
     '[ swap [ nip @ ] curry <roll-button> f track-add ] assoc-each
-    show-menu ; inline
+    { 2 2 } <border> { 2 2 } <filled-border> show-menu ; inline
 
 : <drop-button> ( value assoc quot -- gadget )
     [ [ at ] keep ] dip '[ _ _ show-drop-menu ] <roll-button> ;
@@ -79,10 +87,12 @@ this software and generated sets entirely at your own risk.
 ;
 
 : warning-window ( -- gadget )
+    f <model> risky set-global 
     vertical <track>
     warning-text <label> f track-add
-    "I agree. Let's do this." [ disc-agree ] <border-button> { 0 10 } <border> f track-add
-    "Scary. Get me out of here." [ disc-disagree ] <border-button> { 0 10 } <border> f track-add 
+    risky get-global "Enable experimental (even riskier) editing" <checkbox> { 0 10 } <border> f track-add
+    "I agree. Start the editor." [ disc-agree ] <border-button> { 0 10 } <border> f track-add
+    "I don't agree. Exit." [ disc-disagree ] <border-button> { 0 10 } <border> f track-add 
     { 5 5 } <border> ;
 
 MAIN-WINDOW: main { { title "Warning!" } }
