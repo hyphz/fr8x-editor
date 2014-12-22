@@ -1,9 +1,9 @@
-! Copyright (C) 2014 Mark Green.
+! Copyright (C) 2014 Mark Green and contributors.
 ! See http://factorcode.org/license.txt for BSD license.
 USING: accessors arrays assocs bitstreams byte-arrays
 fr8x-data-format-syntax fry io io.directories
 io.encodings.binary io.files kernel math math.parser sequences
-sequences.deep strings xml xml.traversal ;
+sequences.deep strings xml xml.traversal locals ;
 FROM: io => read ;
 FROM: assocs => change-at ;
 RENAME: read bitstreams => bsread
@@ -18,10 +18,13 @@ TUPLE: chunkinfo
 
 ERROR: loading-error desc ;
 
+! Reads preamble part of a set file
 : read-header ( -- bin )
     "\x8d" read-until
     [ "Missing end of preamble marker" loading-error ] unless ;
 
+! Skips over bytes at the start of a setfile
+! Note: although this seems to be "junk", the FR8X will reject files if it is changed
 : chop-junk ( bin -- slice )
     CHAR: < over index [
         tail-slice
@@ -57,6 +60,7 @@ ERROR: loading-error desc ;
 : load-chunks ( chunkinfos -- chunkdatas )
     tell-input 1 - [ load-chunk ] curry map ;
 
+! File format specs - these are based on the FR7X specs 
 ! Defines scData, pack-scData, unpack-scData
 
 ROLAND-CHUNK-FORMAT: scData
@@ -97,7 +101,7 @@ ROLAND-CHUNK-FORMAT: scData
     bassoon integer 7
     edited integer 7
     dummy integer 15
-    unknown intlist 57 7 ;
+    unknown intlist 89 7 ;
 
 ! Defines: trData, pack-trData, unpack-trData
 
@@ -138,7 +142,7 @@ ROLAND-CHUNK-FORMAT: trData
     midi-reverb integer 12
     midi-chorus integer 12
     edited integer 7
-    dummy intlist 244 7 ;
+    unknown intlist 244 7 ;
 
 ! Defines orData, pack-orData, unpack-orData
 
@@ -156,11 +160,12 @@ ROLAND-CHUNK-FORMAT: orData
    reg-edited integer 7
    vtw-preset-ref integer 7
    vtw-preset-edited integer 7
-   junk intlist 8 7 ;
+   unknown intlist 74 7 
+   overhang integer 2 ;
 
-! Defines orchBassData, pack-orchBassData, unpack-orchBassData
+! Defines obrData, pack-obrData, unpack-obrData
 
-ROLAND-CHUNK-FORMAT: orchBassData
+ROLAND-CHUNK-FORMAT: obrData
     custom-name ascii 12 7
     patch-cc00 integer 7
     patch-cc32 integer 7
@@ -169,13 +174,46 @@ ROLAND-CHUNK-FORMAT: orchBassData
     reg-edited integer 7
     vtw-preset-ref integer 7
     vtw-preset-edited integer 7
-    junk intlist 8 7 ;
+    unknown intlist 56 7 
+    overhang integer 3 ;
+
+! Defines obcrfData, pack-obcrfData, unpack-obcrfData
+! These seem to work for OBC_R and OBF_R although unknowns may be different
+ROLAND-CHUNK-FORMAT: obcrfData
+    custom-name ascii 12 7
+    patch-cc00 integer 7
+    patch-cc32 integer 7
+    patch-pc integer 7
+    dynamic-mode integer 7
+    reg-edited integer 7
+    vtw-preset-ref integer 7
+    vtw-preset-edited integer 7
+    unknown intlist 63 7 
+    overhang integer 2 ;
+
+! Encode or decode all known chunks and replace content of setfile dictionary with decoded version
+! DO NOT PUT ANY PACKS/UNPACKERS IN HERE IF THEY DO NOT PAST CHUNK-SYMMETRY-TEST 
+! AND CHECK FILE-SYMMETRY-TEST IS PASSED BEFORE COMMIT !!
+
+       
 
 : decode-known-chunks ( chunks -- chunks )
-    "TR" over [ [ <msb0-bit-reader> unpack-trData ] map ] change-at ;
+    "TR" over [ [ <msb0-bit-reader> unpack-trData ] map ] change-at 
+    "SC" over [ first <msb0-bit-reader> unpack-scData ] change-at 
+    "O_R" over [ [ <msb0-bit-reader> unpack-orData ] map ] change-at 
+    "OB_R" over [ [ <msb0-bit-reader> unpack-obrData ] map ] change-at 
+    "OBC_R" over [ [ <msb0-bit-reader> unpack-obcrfData ] map ] change-at 
+    "OFB_R" over [ [ <msb0-bit-reader> unpack-obcrfData ] map ] change-at ;
+     
 
 : encode-known-chunks ( chunks -- chunks )
-    "TR" over [ [ pack-trData ] map ] change-at ;
+    "TR" over [ [ pack-trData ] map ] change-at 
+    "SC" over [ pack-scData { } swap suffix ] change-at 
+    "O_R" over [ [ pack-orData ] map ] change-at 
+    "OB_R" over [ [ pack-obrData ] map ] change-at 
+    "OBC_R" over [ [ pack-obcrfData ] map ] change-at 
+    "OFB_R" over [ [ pack-obcrfData ] map ] change-at ;
+
 
 : parse-set-file ( -- data )
     parse-header load-chunks decode-known-chunks ;
@@ -183,7 +221,6 @@ ROLAND-CHUNK-FORMAT: orchBassData
 : load-set-file ( fn -- data )
     binary [ parse-set-file ] with-file-reader ;
 
-: load-test-file ( -- head ) "FR-8X_SET_001.ST8" load-set-file ;
 
 : get-chunk ( alist id -- chunk )
     swap at* [ "Missing chunk type" loading-error ] unless ;
@@ -194,3 +231,24 @@ ROLAND-CHUNK-FORMAT: orchBassData
 : save-set-file ( data fn -- )
     "resource:work/fr8x-data/standard.preamble" over copy-file
     binary [ write-chunks ] with-file-appender ;
+
+
+! Name of any set file to use for testing purposes
+! Recommended to use one of the exported FR8X system files -
+! these are not included due to potential Roland copyright
+! If you can't get one, try the Dallape sets from the Yahoo group
+CONSTANT: test-file-name "FR-8X_SET_012.ST8"
+
+! For quickly loading the test file for testing at the console
+: load-test-file ( -- head ) test-file-name load-set-file ;
+
+! Checks that packing and unpacking a chunk leaves it unchanged
+:: chunk-symmetry-test ( name unpacker packer -- ? )
+    load-test-file name get-chunk first 
+    dup <msb0-bit-reader> 
+    unpacker call packer call 2dup = ; inline
+
+! Checks that decoding and encoding a file leaves it unchanged
+: file-symmetry-test ( -- ? )
+    load-test-file "symtest.st8" save-set-file
+    test-file-name binary file-contents "symtest.st8" binary file-contents = ;

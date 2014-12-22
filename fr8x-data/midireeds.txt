@@ -27,7 +27,7 @@ I-Folk
 4 0 2
 4 0 2
 18 0 16
-Ballroom
+I-folk2
 0 0 3
 1 0 3
 2 0 3
@@ -45,7 +45,7 @@ D-Folk
 4 0 4
 4 0 4
 18 0 4
-CiaoRome
+OldItaly
 0 0 5
 1 0 5
 2 0 5
@@ -90,7 +90,7 @@ F-Folk
 4 0 9
 4 0 9
 18 0 9
-OldParis
+F-Folk2
 0 0 10
 1 0 10
 2 0 10
@@ -117,7 +117,7 @@ Concerto
 4 0 14
 4 0 14
 18 0 14
-DiatFolk
+Organetto
 0 0 15
 1 0 15
 2 0 15
