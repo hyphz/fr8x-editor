@@ -191,6 +191,80 @@ ROLAND-CHUNK-FORMAT: obcrfData
     unknown intlist 63 7 
     overhang integer 2 ;
 
+! Defines brData, pack-brData, unpack-brData
+ROLAND-CHUNK-FORMAT: brData
+    register-name ascii 13 7
+    voice-timbre-cc00 intlist 10 7
+    voice-timbre-cc32 intlist 10 7
+    voice-timbre-pc intlist 10 7
+    voice-on-off intlist 10 7
+    voice-volume intlist 10 7
+    keyrange-16 integer 7
+    keyrange-8 integer 7
+    active-bass-state integer 7
+    note-tx-filter integer 7
+    note-on-velocity integer 7
+    midi-octave integer 7
+    drumkit-note-number intlist 3 12
+    drumkit-note-volume intlist 3 12
+    midi-cc00 integer 12
+    midi-cc32 integer 12
+    midi-pc integer 12
+    midi-volume integer 12
+    midi-panpot integer 12
+    midi-reverb integer 12
+    midi-chorus integer 12
+    midi-bellow integer 7
+    edited integer 1
+    unknown intlist 3 7
+    overhang integer 4 ;
+
+! Defines bcrData, pack-bcrData, unpack-bcrData
+ROLAND-CHUNK-FORMAT: bcrData
+    register-name ascii 13 7
+    voice-timbre-cc00 intlist 10 7
+    voice-timbre-cc32 intlist 10 7
+    voice-timbre-pc intlist 10 7
+    voice-on-off intlist 10 7
+    voice-volume intlist 10 7
+    drumkit-note-number intlist 3 12
+    drumkit-note-volume intlist 3 12
+    reverb-send integer 7
+    chorus-send integer 7
+    delay-send integer 7
+    bellow-pitch-detune integer 7
+    growl-on-off integer 7
+    growl-volume integer 7
+    growl-16-cc00 integer 7
+    growl-16-cc32 integer 7
+    growl-16-pc integer 7
+    growl-84-cc00 integer 7
+    growl-84-cc32 integer 7
+    growl-84-pc integer 7
+    bnoise-on-off integer 7
+    bnoise-volume integer 7
+    bnoise-cc00 integer 7
+    bnoise-cc32 integer 7
+    bnoise-pc integer 7
+    note-tx-filter integer 7
+    note-on-velocity integer 7
+    midi-octave integer 7
+    midi-cc00 integer 12
+    midi-cc32 integer 12
+    midi-pc integer 12
+    midi-volume integer 12
+    midi-panpot integer 12
+    midi-reverb integer 12
+    midi-chorus integer 12
+    midi-bellow integer 7
+    edited integer 7
+    midi-drum-tx integer 1
+    dummy-edited integer 5
+    dummy integer 7 
+    overhang integer 4 ;
+
+
+
 ! Encode or decode all known chunks and replace content of setfile dictionary with decoded version
 ! DO NOT PUT ANY PACKS/UNPACKERS IN HERE IF THEY DO NOT PAST CHUNK-SYMMETRY-TEST 
 ! AND CHECK FILE-SYMMETRY-TEST IS PASSED BEFORE COMMIT !!
@@ -203,7 +277,9 @@ ROLAND-CHUNK-FORMAT: obcrfData
     "O_R" over [ [ <msb0-bit-reader> unpack-orData ] map ] change-at 
     "OB_R" over [ [ <msb0-bit-reader> unpack-obrData ] map ] change-at 
     "OBC_R" over [ [ <msb0-bit-reader> unpack-obcrfData ] map ] change-at 
-    "OFB_R" over [ [ <msb0-bit-reader> unpack-obcrfData ] map ] change-at ;
+    "OFB_R" over [ [ <msb0-bit-reader> unpack-obcrfData ] map ] change-at 
+    "BR" over [ [ <msb0-bit-reader> unpack-brData ] map ] change-at 
+    "BCR" over [ [ <msb0-bit-reader> unpack-bcrData ] map ] change-at ;
      
 
 : encode-known-chunks ( chunks -- chunks )
@@ -212,7 +288,9 @@ ROLAND-CHUNK-FORMAT: obcrfData
     "O_R" over [ [ pack-orData ] map ] change-at 
     "OB_R" over [ [ pack-obrData ] map ] change-at 
     "OBC_R" over [ [ pack-obcrfData ] map ] change-at 
-    "OFB_R" over [ [ pack-obcrfData ] map ] change-at ;
+    "OFB_R" over [ [ pack-obcrfData ] map ] change-at 
+    "BR" over [ [ pack-brData ] map ] change-at 
+    "BCR" over [ [ pack-bcrData ] map ] change-at ;
 
 
 : parse-set-file ( -- data )
