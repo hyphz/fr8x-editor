@@ -138,7 +138,7 @@ SYMBOL: risky
     [ readln-skipcomments dup ] [ parse-midireed ] produce nip ;
 
 : load-midi-reed-data ( -- reeddata ) 
-    "resource:work/fr8x-data/midireeds.txt" utf8 [ parse-midi-reed-data ] with-file-reader ;
+    "vocab:fr8x-data/midireeds.txt" utf8 [ parse-midi-reed-data ] with-file-reader ;
 
 : disc-agree ( button -- )
     close-window 

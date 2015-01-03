@@ -307,7 +307,7 @@ ROLAND-CHUNK-FORMAT: bcrData
     encode-known-chunks values flatten >byte-array write flush ;
 
 : save-set-file ( data fn -- )
-    "resource:work/fr8x-data/standard.preamble" over copy-file
+    "vocab:fr8x-data/standard.preamble" over copy-file
     binary [ write-chunks ] with-file-appender ;
 
 
