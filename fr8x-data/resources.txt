@@ -1,0 +1,3 @@
+midireeds.txt
+midivoices.txt
+standard.preamble
