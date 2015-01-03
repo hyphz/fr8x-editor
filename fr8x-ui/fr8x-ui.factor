@@ -1,37 +1,83 @@
-! Copyright (C) 2014 Mark Green.
+! Copyright (C) 2014 Mark Green and contributors.
 ! See http://factorcode.org/license.txt for BSD license.
 USING: accessors assocs fry kernel locals make math math.parser
 models multiline prettyprint sequences system ui ui.gadgets
 ui.gadgets.book-extras ui.gadgets.borders ui.gadgets.buttons
 ui.gadgets.editors ui.gadgets.grids ui.gadgets.labels
-ui.gadgets.menus ui.gadgets.tracks models namespaces ;
+ui.gadgets.menus ui.gadgets.tracks namespaces fr8x-data 
+models.arrow models.arrow.smart combinators combinators.short-circuit 
+io strings io.encodings.utf8 io.files splitting ;
 IN: fr8x-ui
+FROM: models => change-model ;
 
+TUPLE: partmodel < model master extractor updater ;
+
+: partmodel-fetch ( partmodel -- ) 
+    dup [ master>> value>> ] [ extractor>> ] bi call( master -- part ) swap set-model ;
+
+: new-partmodel ( master extractor updater class -- partmodel ) 
+    f swap new-model swap >>updater swap >>extractor [ add-dependency ] [ swap >>master ] 2bi dup partmodel-fetch ; 
+
+M: partmodel model-changed nip partmodel-fetch ;
+
+M: partmodel model-activated partmodel-fetch ;
+
+M: partmodel update-model
+    dup master>> locked?>> [ "Warning: partmodel failing to update master" . drop ] [
+        dup [ master>> value>> ] [ value>> ] [ updater>> ] tri call( mastervalue newslavevalue -- ) 
+        master>> [ [ update-model ] [ notify-connections ] bi ] with-locked-model 
+    ] if ; 
+
+: <partmodel> ( master extractor updater -- partmodel ) partmodel new-partmodel ; 
+
+: <nthmodel> ( master index -- partmodel ) 
+    [ '[ _ swap nth ] ] [ '[ _ rot set-nth ] ] bi <partmodel> ;
+
+
+SYMBOL: midireednames
 SYMBOL: risky
-
 
 : risky? ( -- ? ) 
     risky get-global value>> ;
 
-
-
 : placeholder ( -- gadget )
     vertical <track> "Lorem ipsum.." <label> f track-add ;
 
-: treble-grid-line ( string -- gadgetseq ) 
-    [
-        <label> ,
-        <editor> ,
-        <editor> ,
-        <editor> ,
-        0 <model> "" <checkbox> ,
-        0 <model> "" <checkbox> ,
-        <editor> ,
-    ] { } make ;
+: voice-name ( num -- name ) {
+    { 0 "16'" }
+    { 1 "8'" }
+    { 2 "8'-" }
+    { 3 "8'+" }
+    { 4 "4'" }
+    { 5 "5-1/3'" }
+    { 6 "2-2/3'" }
+    { 7 "Unknown Extra Reed 1" }
+    { 8 "Unknown Extra Reed 2" } } at* drop ;
+
+: bool>bin ( bool -- bin ) 1 0 ? ;
+: bin>bool ( bin -- bool ) 1 = ;
+
+     
+: raw-voice-name ( num -- name ) number>string "Voice " prepend ;
+
+: treble-grid-line ( model voice -- gadgetseq ) 
+    [ { 
+        [ risky? [ raw-voice-name ] [ voice-name ] if <label> , drop ] 
+        [ '[ voice-timbre-cc00>> _ swap nth number>string ] <arrow> <model-field> , ]
+        [ drop drop <editor> , ]
+        [ drop drop <editor> , ]
+        [ [ '[ voice-on-off>> _ swap nth bin>bool ] ] [ '[ bool>bin swap voice-on-off>> _ swap set-nth ] ] bi <partmodel> "" <checkbox> , ]
+        [ '[ voice-cassotto>> _ swap nth 1 = ] <arrow> "" <checkbox> , ]
+        [ drop drop <editor> , ]
+      } 2cleave 
+    ] { } make ; 
+
+
 
 : <blabel> ( label -- gadget ) <label> { 2 2 } <border> ;
 
-: reed-editor ( -- gadget )
+: reed-editor ( regselector datamodel -- gadget )
+    [ nth ] <smart-arrow>
     [
          [
             "Reed" <blabel> ,
@@ -42,16 +88,18 @@ SYMBOL: risky
             "Cassotto" <blabel> ,
             "Volume" <blabel> ,
         ] { } make ,
-        "Bassoon" treble-grid-line ,
+        risky? 9 7 ?  [ '[ _ treble-grid-line , ] keep ] each-integer drop  
     ] { } make <grid> ;
 
-: register-select ( register -- ) drop ;
+: register-select ( button register -- ) swap model>> set-model ;
 
 : register-buttons ( -- gadget )
-    horizontal <track>
-    16 14 risky? ? [
-        [ 1 + number>string ] [ '[ drop _ register-select ] ] bi
-        <border-button> f track-add
+    horizontal <track> 
+    1 <model> >>model
+    risky? 16 14 ? [
+        [ 1 + number>string ] [ '[ _ register-select ] ] bi <border-button> 
+        over model>> >>model  
+        f track-add
     ] each-integer ;
 
 : show-drop-menu ( button assoc quot -- )
@@ -62,17 +110,40 @@ SYMBOL: risky
 : <drop-button> ( value assoc quot -- gadget )
     [ [ at ] keep ] dip '[ _ _ show-drop-menu ] <roll-button> ;
 
-: treble-editor ( -- gadgets )
+:: treble-editor ( model -- gadgets ) 
     vertical <track>
-    register-buttons f track-add
-    reed-editor f track-add
+    register-buttons [ f track-add ] [ model>> ] bi                     
+    model [ "TR" get-chunk ] <arrow> reed-editor f track-add
     0 { { 0 "Test" } { 1 "Moose" } } [ . ] <drop-button> f track-add ;
 
-: editor-layout ( -- gadget )
-    [ treble-editor , ] { } make <book*> { 5 5 } <border> ;
+: editor-layout ( model -- gadget )
+    [ [ treble-editor , ] keep ] { } make <book*> { 5 5 } <border> swap >>model ;
+
+
+: readln-skipcomments ( -- line )
+    f [ dup { [ string? not ] [ first CHAR: # = not ] } 1|| ] [ drop readln ] do until ; 
+
+
+: parse-midivoice ( str -- tuple )
+    " " split [ string>number ] map ;
+
+
+: parse-midireed ( name -- reeddata ) 
+    { } swap suffix
+    { } 8 [ readln-skipcomments parse-midivoice suffix ] times 
+    suffix ;
+
+    
+: parse-midi-reed-data ( -- reeddata )  
+    [ readln-skipcomments dup ] [ parse-midireed ] produce nip ;
+
+: load-midi-reed-data ( -- reeddata ) 
+    "resource:work/fr8x-data/midireeds.txt" utf8 [ parse-midi-reed-data ] with-file-reader ;
 
 : disc-agree ( button -- )
-    close-window editor-layout "FR8x Set Editor" open-window ;
+    close-window 
+    load-midi-reed-data midireednames set-global
+    load-test-file <model> editor-layout "FR8x Set Editor" open-window ;
 
 : disc-disagree ( button -- )
     close-window 1 exit ;
