@@ -16,7 +16,7 @@ TUPLE: partmodel < model master extractor updater ;
     dup [ master>> value>> ] [ extractor>> ] bi call( master -- part ) swap set-model ;
 
 : new-partmodel ( master extractor updater class -- partmodel ) 
-    f swap new-model swap >>updater swap >>extractor [ add-dependency ] [ swap >>master ] 2bi dup partmodel-fetch ; 
+    f swap new-model swap >>updater swap >>extractor [ add-dependency ] [ swap >>master ] 2bi ; 
 
 M: partmodel model-changed nip partmodel-fetch ;
 
@@ -63,11 +63,11 @@ SYMBOL: risky
 : treble-grid-line ( model voice -- gadgetseq ) 
     [ { 
         [ risky? [ raw-voice-name ] [ voice-name ] if <label> , drop ] 
-        [ '[ voice-timbre-cc00>> _ swap nth number>string ] <arrow> <model-field> , ]
+        [ [ '[ voice-timbre-cc00>> _ swap nth number>string ] ] [ '[ string>number swap voice-timbre-cc00>> _ swap set-nth ] ] bi <partmodel> <model-field> , ]
         [ drop drop <editor> , ]
         [ drop drop <editor> , ]
         [ [ '[ voice-on-off>> _ swap nth bin>bool ] ] [ '[ bool>bin swap voice-on-off>> _ swap set-nth ] ] bi <partmodel> "" <checkbox> , ]
-        [ '[ voice-cassotto>> _ swap nth 1 = ] <arrow> "" <checkbox> , ]
+        [ [ '[ voice-cassotto>> _ swap nth bin>bool ] ] [ '[ bool>bin swap voice-cassotto>> _ swap set-nth ] ] bi <partmodel> "" <checkbox> , ]
         [ drop drop <editor> , ]
       } 2cleave 
     ] { } make ; 
