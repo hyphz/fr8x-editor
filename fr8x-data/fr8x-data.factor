@@ -320,13 +320,3 @@ CONSTANT: test-file-name "FR-8X_SET_012.ST8"
 ! For quickly loading the test file for testing at the console
 : load-test-file ( -- head ) test-file-name load-set-file ;
 
-! Checks that packing and unpacking a chunk leaves it unchanged
-:: chunk-symmetry-test ( name unpacker packer -- ? )
-    load-test-file name get-chunk first 
-    dup <msb0-bit-reader> 
-    unpacker call packer call 2dup = ; inline
-
-! Checks that decoding and encoding a file leaves it unchanged
-: file-symmetry-test ( -- ? )
-    load-test-file "symtest.st8" save-set-file
-    test-file-name binary file-contents "symtest.st8" binary file-contents = ;
