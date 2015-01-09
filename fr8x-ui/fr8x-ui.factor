@@ -6,7 +6,8 @@ ui.gadgets.book-extras ui.gadgets.borders ui.gadgets.buttons
 ui.gadgets.editors ui.gadgets.grids ui.gadgets.labels
 ui.gadgets.menus ui.gadgets.tracks namespaces fr8x-data 
 models.arrow models.arrow.smart combinators combinators.short-circuit 
-io strings io.encodings.utf8 io.files splitting ;
+io strings io.encodings.utf8 io.files splitting colors.constants 
+ui.pens.solid ui.gadgets.glass ;
 IN: fr8x-ui
 FROM: models => change-model ;
 
@@ -36,6 +37,7 @@ M: partmodel update-model
 
 SYMBOL: midireednames
 SYMBOL: risky
+SYMBOL: midireedindex
 
 : risky? ( -- ? ) 
     risky get-global value>> ;
@@ -59,6 +61,17 @@ SYMBOL: risky
 
      
 : raw-voice-name ( num -- name ) number>string "Voice " prepend ;
+
+: midipatch>reed ( midipatch -- reedindex reeddata ) 
+    midireednames get-global swap '[ first _ swap member? ] find ;
+
+: reed-in-right-place? ( reedslot midipatch reeddata -- ? )
+    first index = ;
+
+: midipatch>reedindex-strict ( reedslot midipatch -- reedindex )
+    dup midipatch>reed swap [ reed-in-right-place? ] keep swap 
+    [ drop -1 ] unless ;
+
 
 : treble-grid-line ( model voice -- gadgetseq ) 
     [ { 
@@ -104,8 +117,12 @@ SYMBOL: risky
 
 : show-drop-menu ( button assoc quot -- )
     [ vertical <track> ] 2dip
-    '[ swap [ nip @ ] curry <roll-button> f track-add ] assoc-each
-    { 2 2 } <border> { 2 2 } <filled-border> show-menu ; inline
+    '[ swap [ swap parent>> hide-glass @ ] curry <roll-button> f track-add ] assoc-each
+    COLOR: white <solid> >>interior
+    { 4 4 } <border> 
+    COLOR: white <solid> >>interior
+    COLOR: black <solid> >>boundary 
+    show-menu ; inline
 
 : <drop-button> ( value assoc quot -- gadget )
     [ [ at ] keep ] dip '[ _ _ show-drop-menu ] <roll-button> ;
@@ -114,7 +131,7 @@ SYMBOL: risky
     vertical <track>
     register-buttons [ f track-add ] [ model>> ] bi                     
     model [ "TR" get-chunk ] <arrow> reed-editor f track-add
-    0 { { 0 "Test" } { 1 "Moose" } } [ . ] <drop-button> f track-add ;
+    0 midireednames get-global [ length iota ] [ values ] bi zip [ . ] <drop-button> f track-add ;
 
 : editor-layout ( model -- gadget )
     [ [ treble-editor , ] keep ] { } make <book*> { 5 5 } <border> swap >>model ;
@@ -131,7 +148,13 @@ SYMBOL: risky
 : parse-midireed ( name -- reeddata ) 
     { } swap suffix
     { } 8 [ readln-skipcomments parse-midivoice suffix ] times 
-    suffix ;
+    prefix ;
+
+: make-reed-index ( reeds -- reedindex )
+   [ length iota ] [ values ] bi zip
+   { -1 "(Displaced reed)" } suffix
+   { -2 "(Non-reed voice)" } suffix 
+   { -3 "(Unknown MIDI patch)" } suffix ;
 
     
 : parse-midi-reed-data ( -- reeddata )  
@@ -142,7 +165,8 @@ SYMBOL: risky
 
 : disc-agree ( button -- )
     close-window 
-    load-midi-reed-data midireednames set-global
+    load-midi-reed-data dup midireednames set-global
+    make-reed-index midireedindex set-global
     load-test-file <model> editor-layout "FR8x Set Editor" open-window ;
 
 : disc-disagree ( button -- )
