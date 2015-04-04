@@ -7,7 +7,7 @@ ui.gadgets.editors ui.gadgets.grids ui.gadgets.labels
 ui.gadgets.menus ui.gadgets.tracks namespaces fr8x-data 
 models.arrow models.arrow.smart combinators combinators.short-circuit 
 io strings io.encodings.utf8 io.files splitting colors.constants 
-ui.pens.solid ui.gadgets.glass ;
+ui.pens.solid ui.gadgets.glass ui.gadgets.scrollers ui.gadgets.tables ;
 IN: fr8x-ui
 FROM: models => change-model ;
 
@@ -68,17 +68,18 @@ SYMBOL: midireedindex
 : reed-in-right-place? ( reedslot midipatch reeddata -- ? )
     first index = ;
 
-: midipatch>reedindex-strict ( reedslot midipatch -- reedindex )
-    dup midipatch>reed swap [ reed-in-right-place? ] keep swap 
-    [ drop -1 ] unless ;
+! : midipatch>reedindex-strict ( reedslot midipatch -- reedindex )
+!    dup midipatch>reed swap [ reed-in-right-place? ] keep swap 
+!    [ drop -1 ] unless ;
 
 
 : treble-grid-line ( model voice -- gadgetseq ) 
     [ { 
         [ risky? [ raw-voice-name ] [ voice-name ] if <label> , drop ] 
+        
         [ [ '[ voice-timbre-cc00>> _ swap nth number>string ] ] [ '[ string>number swap voice-timbre-cc00>> _ swap set-nth ] ] bi <partmodel> <model-field> , ]
-        [ drop drop <editor> , ]
-        [ drop drop <editor> , ]
+        [ [ '[ voice-timbre-cc32>> _ swap nth number>string ] ] [ '[ string>number swap voice-timbre-cc32>> _ swap set-nth ] ] bi <partmodel> <model-field> , ]
+        [ [ '[ voice-timbre-pc>> _ swap nth number>string ] ] [ '[ string>number swap voice-timbre-pc>> _ swap set-nth ] ] bi <partmodel> <model-field> , ]                
         [ [ '[ voice-on-off>> _ swap nth bin>bool ] ] [ '[ bool>bin swap voice-on-off>> _ swap set-nth ] ] bi <partmodel> "" <checkbox> , ]
         [ [ '[ voice-cassotto>> _ swap nth bin>bool ] ] [ '[ bool>bin swap voice-cassotto>> _ swap set-nth ] ] bi <partmodel> "" <checkbox> , ]
         [ drop drop <editor> , ]
@@ -94,9 +95,8 @@ SYMBOL: midireedindex
     [
          [
             "Reed" <blabel> ,
-            "CC00" <blabel> ,
-            "CC32" <blabel> ,
-            "PC" <blabel> ,
+	    "Voice" <blabel> , 
+            risky? [ "CC00" <blabel> , "CC32" <blabel> , "PC" <blabel> , ] when 
             "Enable" <blabel> ,
             "Cassotto" <blabel> ,
             "Volume" <blabel> ,
@@ -115,14 +115,18 @@ SYMBOL: midireedindex
         f track-add
     ] each-integer ;
 
-: show-drop-menu ( button assoc quot -- )
-    [ vertical <track> ] 2dip
-    '[ swap [ swap parent>> hide-glass @ ] curry <roll-button> f track-add ] assoc-each
-    COLOR: white <solid> >>interior
-    { 4 4 } <border> 
-    COLOR: white <solid> >>interior
-    COLOR: black <solid> >>boundary 
-    show-menu ; inline
+! : show-drop-menu ( button assoc quot -- )
+!    [ vertical <track> ] 2dip
+!    '[ swap [ swap parent>> hide-glass @ ] curry <roll-button> f track-add ] assoc-each
+!    COLOR: white <solid> >>interior
+!    <scroller> 
+!    { 4 4 } <border> 
+!    COLOR: white <solid> >>interior
+!    COLOR: black <solid> >>boundary 
+!    show-menu ; inline
+
+: show-drop-menu ( button assoc quot -- ) 
+    over values trivial-renderer <table> 2nip show-menu ;
 
 : <drop-button> ( value assoc quot -- gadget )
     [ [ at ] keep ] dip '[ _ _ show-drop-menu ] <roll-button> ;
