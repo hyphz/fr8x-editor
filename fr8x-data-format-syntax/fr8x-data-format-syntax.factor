@@ -33,8 +33,8 @@ RENAME: read bitstreams => bsread
 
 SYNTAX: ROLAND-CHUNK-FORMAT:
       scan-token
-      [ "unpack-" prepend create-in ]
-      [ "pack-" prepend create-in ]
+      [ "unpack-" prepend create-word-in ]
+      [ "pack-" prepend create-word-in ]
       [ create-class-in ] tri
       [
           [ scan-token dup ";" = ] [
